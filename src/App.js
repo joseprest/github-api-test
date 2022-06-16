@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 import { octokit } from "./utils/octokit";
+
+const schema = yup.object().shape({
+  repoLink: yup.string().required(),
+  searchText: yup.string().max(32).required(),
+});
 // import useGithub from "./hooks/useGithub";
 
 function App() {
@@ -8,6 +16,20 @@ function App() {
   const [repos, setRepos] = useState([]);
   const inputRef = useRef();
   const inputRepoRef = useRef();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm({
+    resolver: yupResolver(schema),
+  });
+
+  const onSubmitHandler = (data) => {
+    console.log({ data });
+    reset();
+  };
   // useEffect(() => {
   //   if (contributions && contributions.length > 0) {
   //     contributions.sort((a, b) =>
@@ -43,14 +65,19 @@ function App() {
     <div className="App">
       <div className="container">
         <div className="contribution-form">
-          <h3>Search users of a specific repository</h3>
-          <span>https://github.com/</span>
-          <input
-            type="text"
-            ref={inputRepoRef}
-            placeholder="joseprest/next.js-shift"
-          />
-          <button onClick={() => handleSearchRepo()}>Search</button>
+          <form onSubmit={handleSubmit(onSubmitHandler)}>
+            <h3>Search users of a specific repository</h3>
+            <span>https://github.com/</span>
+            <input
+              type="text"
+              required
+              ref={inputRepoRef}
+              {...register("repoLink")}
+              placeholder="joseprest/next.js-shift"
+            />
+            <p>{errors.email?.message}</p>
+            <button onClick={() => handleSearchRepo()}>Search</button>
+          </form>
 
           {contributions && contributions.length > 0 && (
             <table>
